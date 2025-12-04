@@ -1,0 +1,24 @@
+# --- Dependencies (Ignores them in root, backend, AND frontend) ---
+node_modules/
+.pnp
+.pnp.js
+
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+build/
+dist/
+coverage/
+
+*.db
+*.sqlite
+*.sqlite3
+
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
