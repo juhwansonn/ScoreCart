@@ -1,3 +1,4 @@
+// frontend/src/pages/AllUsersPage.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../api/config';
@@ -6,14 +7,13 @@ import { useAuth } from '../context/AuthContext';
 const AllUsersPage = () => {
     const [users, setUsers] = useState([]);
     const [error, setError] = useState('');
-    const { user } = useAuth(); // Get current user (token)
+    const { token } = useAuth(); // We don't even need 'user' here anymore
 
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                // We use the token to prove we are an admin
                 const response = await axios.get(`${API_BASE_URL}/users`, {
-                    headers: { Authorization: `Bearer ${user.token}` }
+                    headers: { Authorization: `Bearer ${token}` }
                 });
                 setUsers(response.data.results);
             } catch (err) {
@@ -22,11 +22,13 @@ const AllUsersPage = () => {
             }
         };
 
-        fetchUsers();
-    }, [user]);
+        if (token) {
+            fetchUsers();
+        }
+    }, [token]);
 
     return (
-        <div>
+        <div style={{ padding: '20px' }}>
             <h2>All Users (Manager View)</h2>
             {error && <p style={{color: 'red'}}>{error}</p>}
             <ul>
