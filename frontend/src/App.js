@@ -4,6 +4,10 @@ import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import AllUsersPage from './pages/AllUsersPage'; 
 import ProtectedRoute from './components/ProtectedRoute'; 
+import EventsPage from './pages/EventsPage';
+import CreateEventPage from './pages/CreateEventPage';
+import PromotionsPage from './pages/PromotionsPage';
+import CreatePromotionPage from './pages/CreatePromotionPage';
 
 function App() {
   return (
@@ -17,13 +21,14 @@ function App() {
         {/* Protected Routes (Authenticated) */}
         <Route element={<ProtectedRoute requiredRole="regular" />}>
           <Route path="/profile" element={<ProfilePage />} />
-          {/* Add all Regular User pages here */}
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/promotions" element={<PromotionsPage />} />
         </Route>
 
         {/* Manager-only Routes */}
         <Route element={<ProtectedRoute requiredRole="manager" />}>
-          <Route path="/users" element={<AllUsersPage />} />
-          {/* Add all Manager pages here */}
+        <Route path="/events/new" element={<CreateEventPage />} />
+        <Route path="/promotions/new" element={<CreatePromotionPage />} />
         </Route>
 
         {/* Cashier Routes */}
