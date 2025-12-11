@@ -1,4 +1,3 @@
-# --- Dependencies (Ignores them in root, backend, AND frontend) ---
 node_modules/
 .pnp
 .pnp.js
