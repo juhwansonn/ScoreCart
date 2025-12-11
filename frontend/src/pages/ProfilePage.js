@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import QRCode from 'react-qr-code';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../api/config';
 
@@ -64,7 +65,17 @@ const ProfilePage = () => {
       <button onClick={logout} style={{ marginTop: '20px', background: 'red', color: 'white' }}>
         Logout
       </button>
+      <div style={{ textAlign: 'center', margin: '30px 0' }}>
+        <h3>My Member QR Code</h3>
+        <div style={{ background: 'white', padding: '16px', display: 'inline-block', border: '1px solid #ccc' }}>
+            {/* The QR code contains the UtorID */}
+            <QRCode value={user.utorid} size={150} />
+        </div>
+        <p style={{ fontSize: '0.9em', color: '#666' }}>Show this to a cashier to earn points</p>
+      </div>
     </div>
+
+    
   );
 };
 

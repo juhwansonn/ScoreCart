@@ -11,6 +11,10 @@ const EventsPage = () => {
     const { user, token } = useAuth();
     const navigate = useNavigate();
 
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const LIMIT = 5;
+
     // Check if user is Manager or Superuser to show "Create" button
     const canCreate = user && (user.role === 'manager' || user.role === 'superuser');
 
@@ -19,16 +23,25 @@ const EventsPage = () => {
             try {
                 // Fetch events (Backend handles filtering published vs all based on role)
                 const response = await axios.get(`${API_BASE_URL}/events`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { 
+                        page: page,
+                        limit: LIMIT   
+                    }
                 });
                 setEvents(response.data.results);
+
+                // Calculate total pages based on total count from backend
+                const totalCount = response.data.count;
+                setTotalPages(Math.ceil(totalCount / LIMIT));
+
             } catch (err) {
                 setError('Failed to fetch events.');
                 console.error(err);
             }
         };
         fetchEvents();
-    }, [token]);
+    }, [token, page]);
 
     return (
         <div style={{ padding: '20px' }}>
@@ -53,6 +66,29 @@ const EventsPage = () => {
                     </div>
                 ))}
                 {events.length === 0 && <p>No events found.</p>}
+            </div>
+
+            {/* --- Pagination Controls --- */}
+            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
+                <button 
+                    disabled={page <= 1} 
+                    onClick={() => setPage(p => p - 1)}
+                    style={{ padding: '8px 16px', cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+                >
+                    Previous
+                </button>
+                
+                <span style={{ fontWeight: 'bold' }}>
+                    Page {page} of {totalPages || 1}
+                </span>
+                
+                <button 
+                    disabled={page >= totalPages} 
+                    onClick={() => setPage(p => p + 1)}
+                    style={{ padding: '8px 16px', cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}
+                >
+                    Next
+                </button>
             </div>
         </div>
     );

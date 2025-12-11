@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import QRCode from 'react-qr-code';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../api/config';
 import { useAuth } from '../context/AuthContext';
@@ -43,8 +44,15 @@ const RedeemPointsPage = () => {
             {successId ? (
                 <div style={{ padding: '20px', border: '2px solid green', borderRadius: '8px', textAlign: 'center' }}>
                     <h3 style={{ color: 'green' }}>Request Created!</h3>
-                    <p>Tell the cashier your Redemption ID:</p>
-                    <h1 style={{ fontSize: '48px', margin: '10px 0' }}>{successId}</h1>
+                    <p>Show this to the cashier:</p>
+                    
+                    {/* QR Code for the Transaction ID */}
+                    <div style={{ background: 'white', padding: '10px', display: 'inline-block', margin: '15px 0' }}>
+                        <QRCode value={String(successId)} size={120} />
+                    </div>
+                    
+                    <h1 style={{ fontSize: '32px', margin: '5px 0' }}>#{successId}</h1>
+                    
                     <button onClick={() => navigate('/transactions')}>View in History</button>
                     <br /><br />
                     <button onClick={() => setSuccessId(null)}>Make Another Request</button>
