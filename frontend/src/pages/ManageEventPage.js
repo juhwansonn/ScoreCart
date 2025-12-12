@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; // Added useCallback
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../api/config';
@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 const ManageEventPage = () => {
     const { id } = useParams();
-    const { token, user: currentUser } = useAuth();
+    const { token } = useAuth(); 
     const navigate = useNavigate();
 
     const [event, setEvent] = useState(null);
@@ -14,13 +14,13 @@ const ManageEventPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Form States
+
     const [formData, setFormData] = useState({});
     const [newOrganizerUtorid, setNewOrganizerUtorid] = useState('');
     const [pointsAmount, setPointsAmount] = useState('');
 
-    // Fetch Event Data
-    const fetchEvent = async () => {
+
+    const fetchEvent = useCallback(async () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/events/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -30,25 +30,23 @@ const ManageEventPage = () => {
                 name: res.data.name,
                 description: res.data.description,
                 location: res.data.location,
-                startTime: res.data.startTime.slice(0, 16), // Format for datetime-local
+                startTime: res.data.startTime.slice(0, 16), 
                 endTime: res.data.endTime.slice(0, 16),
                 capacity: res.data.capacity,
-                points: res.data.pointsRemain + res.data.pointsAwarded // Total points logic might vary based on your backend logic
+                points: res.data.pointsRemain + res.data.pointsAwarded
             });
             setLoading(false);
         } catch (err) {
             setError("Failed to load event. You may not have permission.");
             setLoading(false);
         }
-    };
+    }, [id, token]);
 
     useEffect(() => {
         fetchEvent();
-    }, [id, token]);
+    }, [fetchEvent]);
 
-    // --- ACTIONS ---
 
-    // 1. Update Event Details
     const handleUpdate = async (e) => {
         e.preventDefault();
         setError(''); setSuccess('');
@@ -58,7 +56,6 @@ const ManageEventPage = () => {
                 startTime: new Date(formData.startTime).toISOString(),
                 endTime: new Date(formData.endTime).toISOString(),
                 capacity: parseInt(formData.capacity),
-                // Note: Updating points usually updates 'pointsRemain'
             };
             
             await axios.patch(`${API_BASE_URL}/events/${id}`, payload, {
@@ -71,7 +68,6 @@ const ManageEventPage = () => {
         }
     };
 
-    // 2. Manage Organizers
     const addOrganizer = async () => {
         try {
             await axios.post(`${API_BASE_URL}/events/${id}/organizers`, 
@@ -97,7 +93,6 @@ const ManageEventPage = () => {
         }
     };
 
-    // 3. Manage Guests
     const removeGuest = async (userId) => {
         if (!window.confirm("Remove this guest?")) return;
         try {
@@ -110,7 +105,6 @@ const ManageEventPage = () => {
         }
     };
 
-    // 4. Award Points
     const awardPoints = async (targetUtorid = null) => {
         const amount = parseInt(pointsAmount);
         if (!amount || amount <= 0) return alert("Enter a valid amount");
