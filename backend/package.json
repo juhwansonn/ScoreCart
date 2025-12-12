@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "seed": "node prisma/seed.js",
-    "postinstall": "npx prisma generate && npx prisma migrate reset --force && npm run seed",
+    "postinstall": "npx prisma generate && npx prisma migrate reset --force",
     "createsuperuser": "node prisma/createsu.js",
     "clean": "rm -rf prisma/dev.db* node_modules package-lock.json prisma/migrations/"
   },
