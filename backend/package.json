@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "postinstall": "prisma generate",
     "createsuperuser": "node prisma/createsu.js",
     "clean": "rm -rf prisma/dev.db* node_modules package-lock.json prisma/migrations/"
   },
