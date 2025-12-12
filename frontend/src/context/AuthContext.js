@@ -5,17 +5,33 @@ import { API_BASE_URL } from '../api/config';
 
 const AuthContext = createContext(null);
 
+// Role hierarchy used for switching
+const ROLE_RANKS = { regular: 0, cashier: 1, manager: 2, superuser: 3 };
+
+// Helper to determine all available roles a user can switch to
+const getAvailableRoles = (primaryRole) => {
+    const primaryRank = ROLE_RANKS[primaryRole.toLowerCase()] || 0;
+    return Object.keys(ROLE_RANKS).filter(role => ROLE_RANKS[role] <= primaryRank);
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('jwt_token') || null);
   const [loading, setLoading] = useState(true);
+  
+  // NEW STATE for Role Switching
+  const [currentRole, setCurrentRole] = useState(null);
+  const [allAvailableRoles, setAllAvailableRoles] = useState([]);
 
   // Function to handle login success
   const login = (jwtToken, userRole) => {
     localStorage.setItem('jwt_token', jwtToken);
     setToken(jwtToken);
-    // You'll fetch the full user object later, but set the role right away if possible
     setUser({ role: userRole }); 
+    
+    const lowerRole = userRole.toLowerCase();
+    setCurrentRole(lowerRole);
+    setAllAvailableRoles(getAvailableRoles(lowerRole));
   };
 
   // Function to handle logout
@@ -23,6 +39,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('jwt_token');
     setToken(null);
     setUser(null);
+    setCurrentRole(null);
+    setAllAvailableRoles([]);
+  };
+
+  // NEW FUNCTION: Allow user to switch their active interface role
+  const switchRole = (newRole) => {
+    if (allAvailableRoles.includes(newRole)) {
+      setCurrentRole(newRole);
+    } else {
+      console.error(`Attempted to switch to unauthorized role: ${newRole}`);
+    }
   };
 
   // Effect to verify token and fetch user details on load
@@ -33,15 +60,21 @@ export const AuthProvider = ({ children }) => {
         return;
       }
       try {
-        // Use the token to fetch user details (GET /users/me)
         const response = await axios.get(`${API_BASE_URL}/users/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        // Save the full user object, including their role
-        setUser(response.data);
+        const userData = response.data;
+        const primaryRole = userData.role.toLowerCase();
+
+        setUser(userData);
+        
+        setAllAvailableRoles(getAvailableRoles(primaryRole));
+        
+        // Set currentRole to the primary role on first load
+        setCurrentRole(prevRole => prevRole || primaryRole); 
+        
       } catch (error) {
-        // If token is invalid or expired, log out the user
         console.error("Token invalid or expired. Logging out.");
         logout();
       } finally {
@@ -52,7 +85,17 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ 
+        user, 
+        token, 
+        login, 
+        logout, 
+        loading, 
+        currentRole, 
+        allAvailableRoles, 
+        switchRole, 
+        ROLE_RANKS 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,10 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, currentRole, allAvailableRoles, switchRole, ROLE_RANKS } = useAuth();
     const navigate = useNavigate();
 
-    // If the user is not logged in, do not render the navbar
     if (!user) {
         return null;
     }
@@ -16,10 +15,16 @@ const Navbar = () => {
         navigate('/login');
     };
 
-    // Helper to check roles (assuming hierarchical: superuser > manager > cashier > regular)
-    const role = (user.role || '').toLowerCase();
-    const isManager = role === 'manager' || role === 'superuser';
-    const isCashier = role === 'cashier' || isManager;
+    // Determine permissions based on the CURRENT ACTIVE ROLE
+    const activeRole = (currentRole || user.role || '').toLowerCase();
+    const isManagerView = ROLE_RANKS[activeRole] >= ROLE_RANKS['manager'];
+    const isCashierView = ROLE_RANKS[activeRole] >= ROLE_RANKS['cashier'];
+    
+    // Check for multiple roles to decide if the dropdown should appear
+    const showRoleSwitch = allAvailableRoles.length > 1;
+
+    // Helper for title casing roles in the UI
+    const toTitleCase = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
     return (
         <nav style={styles.nav}>
@@ -29,34 +34,56 @@ const Navbar = () => {
                 </div>
 
                 <div style={styles.links}>
-                    {/* Common Links (Everyone) */}
+                    {/* Common Links (Regular View) */}
                     <Link to="/profile" style={styles.link}>Profile</Link>
                     <Link to="/events" style={styles.link}>Events</Link>
                     <Link to="/promotions" style={styles.link}>Promotions</Link>
-
-                    {/* Regular User Actions */}
                     <Link to="/transactions" style={styles.link}>History</Link>
                     <Link to="/transfer" style={styles.link}>Transfer</Link>
                     <Link to="/redeem" style={styles.link}>Redeem</Link>
 
-                    {/* Manager / Cashier Links */}
-                    {isCashier && (
+                    {/* Cashier Links (Conditional on Active Role) */}
+                    {isCashierView && (
                         <div style={styles.separator}>
                             <span style={{ color: '#aaa' }}>|</span>
                             <Link to="/cashier" style={styles.link}>Charge</Link> 
-                            
                             <Link to="/redeem/process" style={styles.link}>Process</Link>
                         </div>
                     )}
 
-                    {isManager && (
+                    {/* Manager Links (Conditional on Active Role) */}
+                    {isManagerView && (
                         <div style={styles.separator}>
+                            <span style={{ color: '#aaa' }}>|</span>
                             <Link to="/users" style={styles.link}>Users</Link>
+                            <Link to="/manager/transactions" style={styles.link}>Global Tx</Link>
                         </div>
                     )}
                 </div>
 
                 <div style={styles.auth}>
+                    {/* Role Switching Dropdown */}
+                    {showRoleSwitch && (
+                        <div style={styles.roleSwitch}>
+                            <label htmlFor="role-select" style={{ marginRight: '5px', color: '#ccc' }}>View as:</label>
+                            <select 
+                                id="role-select"
+                                value={activeRole} 
+                                onChange={(e) => switchRole(e.target.value)}
+                                style={styles.select}
+                            >
+                                {allAvailableRoles
+                                    .sort((a, b) => ROLE_RANKS[b] - ROLE_RANKS[a]) // Sort descending (superuser first)
+                                    .map(role => (
+                                        <option key={role} value={role}>
+                                            {toTitleCase(role)}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+                        </div>
+                    )}
+
                     <span style={{ marginRight: '15px', fontWeight: 'bold' }}>
                         @{user.utorid}
                     </span>
@@ -69,7 +96,6 @@ const Navbar = () => {
     );
 };
 
-// Simple inline styles
 const styles = {
     nav: {
         backgroundColor: '#333',
@@ -118,6 +144,19 @@ const styles = {
         color: 'white',
         border: 'none',
         borderRadius: '4px',
+    },
+    roleSwitch: {
+        display: 'flex',
+        alignItems: 'center',
+        marginRight: '20px',
+    },
+    select: {
+        padding: '4px',
+        borderRadius: '4px',
+        border: 'none',
+        backgroundColor: '#555',
+        color: 'white',
+        cursor: 'pointer',
     }
 };
 
