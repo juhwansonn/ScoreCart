@@ -33,7 +33,7 @@ const Navbar = () => {
             <div style={styles.container}>
                 <div style={styles.brand}>
                     {/* ACTION: Clicking the brand logo redirects to the Dashboard (/) */}
-                    <Link to="/" style={styles.brandLink}>CSSU Rewards</Link>
+                    <Link to="/" style={styles.brandLink}>Score Cart</Link>
                 </div>
 
                 <div style={styles.links}>
