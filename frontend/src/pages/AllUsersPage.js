@@ -17,29 +17,46 @@ const AllUsersPage = () => {
     // 1. DEFINE fetchUsers WITH useCallback
     // This makes it accessible everywhere in the component, but stable so it doesn't cause loops
     const fetchUsers = useCallback(async () => {
-        try {
-            // Updated to use API_BASE_URL and pass the page param
-            const res = await axios.get(`${API_BASE_URL}/users`, {
-                headers: { Authorization: `Bearer ${token}` },
-                params: { page: page, limit: 10 } // sending pagination to backend
-            });
-            
-            // Assuming backend returns { users: [], totalPages: 5 }
-            // Adjust this if your backend just returns an array
-            if (res.data.users) {
-                setUsers(res.data.users);
-                setTotalPages(res.data.totalPages);
-            } else {
-                // Fallback if backend just returns an array
-                setUsers(res.data);
-            }
-            
-        } catch (err) {
-            console.error(err);
-            setError("Failed to fetch users");
-        }
-    }, [token, page]); // Dependencies: recreate this function if token or page changes
+    try {
+        const res = await axios.get(`${API_BASE_URL}/users`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { page: page, limit: 10 }
+        });
 
+        // 1. DEBUG: Look at this in your browser console (F12)
+        console.log("Full API Response:", res.data);
+
+        // 2. ROBUST CHECK: Try to find the array in common places
+        let usersArray = [];
+        
+        if (Array.isArray(res.data)) {
+            // Case A: Backend returns just [ ... ]
+            usersArray = res.data;
+        } else if (res.data.users && Array.isArray(res.data.users)) {
+            // Case B: Backend returns { users: [ ... ] }
+            usersArray = res.data.users;
+            setTotalPages(res.data.totalPages || 1);
+        } else if (res.data.results && Array.isArray(res.data.results)) {
+            // Case C: Backend returns { results: [ ... ] } (Common in paginated APIs)
+            usersArray = res.data.results;
+        } else if (res.data.data && Array.isArray(res.data.data)) {
+            // Case D: Backend returns { data: [ ... ] }
+            usersArray = res.data.data;
+        }
+
+        // 3. SET STATE
+        setUsers(usersArray);
+        
+        // Log if we failed to find anything
+        if (usersArray.length === 0) {
+            console.warn("Warning: usersArray is empty. Check API response structure.");
+        }
+
+    } catch (err) {
+        console.error(err);
+        setError("Failed to fetch users");
+    }
+    }, [token, page]);
     // 2. CALL IT IN useEffect
     useEffect(() => {
         fetchUsers();
