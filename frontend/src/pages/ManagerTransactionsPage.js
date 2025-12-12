@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../api/config';
 import { useAuth } from '../context/AuthContext';
@@ -13,18 +13,17 @@ const ManagerTransactionsPage = () => {
     const [filterType, setFilterType] = useState('');
     const [sortOrder, setSortOrder] = useState('newest');
 
-    // Fetch All Transactions
-    const fetchTransactions = async () => {
+    // 1. FIX: Wrap function in useCallback so it's stable
+    const fetchTransactions = useCallback(async () => {
         try {
             setLoading(true);
-            // Assuming endpoint is /transactions or /users/transactions/all
-            // Based on standard REST design for managers
+            setError(''); // Clear previous errors on new fetch
+            
             const res = await axios.get(`${API_BASE_URL}/transactions`, {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { type: filterType, orderBy: sortOrder }
             });
             
-            // Handle array response
             if (Array.isArray(res.data)) {
                 setTransactions(res.data);
             } else if (res.data.results) {
@@ -38,27 +37,28 @@ const ManagerTransactionsPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token, filterType, sortOrder]); // Re-create only if these change
 
+    // 2. FIX: Add function to dependency array
     useEffect(() => {
         fetchTransactions();
-    }, [token, filterType, sortOrder]);
+    }, [fetchTransactions]);
 
     // Action: Flag Transaction as Suspicious
     const toggleSuspicious = async (txId, currentStatus) => {
         if (!window.confirm(`Mark transaction as ${!currentStatus ? 'Suspicious' : 'Safe'}?`)) return;
         try {
-            await axios.patch(`${API_BASE_URL}/transactions/${txId}`, 
+            await axios.patch(`${API_BASE_URL}/transactions/${txId}/suspicious`, 
                 { suspicious: !currentStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            fetchTransactions(); // Refresh
+            fetchTransactions(); 
         } catch (err) {
             alert("Failed to update transaction.");
         }
     };
 
-    // Action: Issue Adjustment (Reversal/Correction)
+    // Action: Issue Adjustment
     const handleAdjustment = async (txId, userUtorid) => {
         const amountStr = prompt(`Enter adjustment amount for User ${userUtorid} (e.g. -50 to deduct, 50 to add):`);
         if (!amountStr) return;
@@ -70,12 +70,13 @@ const ManagerTransactionsPage = () => {
         }
 
         try {
-            // Creating a NEW transaction that references the old one
+            // NOTE: Ensure your backend supports this structure or adapt as needed
             await axios.post(`${API_BASE_URL}/transactions`, 
                 { 
                     type: 'adjustment',
                     amount: amount,
-                    relatedTransactionId: txId,
+                    relatedId: txId, // Using relatedId as per schema
+                    utorid: userUtorid, // Explicitly linking to the user
                     remark: `Adjustment for Tx #${txId}`
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -83,6 +84,7 @@ const ManagerTransactionsPage = () => {
             alert("Adjustment transaction created.");
             fetchTransactions();
         } catch (err) {
+            console.error(err);
             alert("Failed to create adjustment.");
         }
     };
@@ -106,6 +108,9 @@ const ManagerTransactionsPage = () => {
                 </select>
                 <button onClick={fetchTransactions} style={{ marginLeft: 'auto' }}>Refresh</button>
             </div>
+
+            {/* 3. FIX: Display the error so the variable is "used" */}
+            {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
 
             {loading ? <p>Loading...</p> : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
