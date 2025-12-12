@@ -1,0 +1,63 @@
+1. Prerequisites
+    The following software is required to run the project locally:
+
+    Node.js (v18+): JavaScript runtime environment.
+
+    npm: Package manager (comes with Node.js).
+
+    Git: Version control system.
+
+    Prisma CLI: Install globally: npm install -g prisma
+
+2. Local Setup (Development)
+    The application consists of separate backend/ and frontend/ directories.
+    - Installation 
+        # Clone the repository
+        git clone [https://github.com/juhwansonn/ScoreCart] 
+        cd 
+
+        # Install Backend Dependencies
+        cd backend
+        npm install
+
+        # Install Frontend Dependencies
+        cd ../frontend
+        npm install
+        cd ..
+
+    - Environment Configuration
+        Create a .env file in the backend/ directory:
+        # .env in backend/
+            PORT=8000
+            JWT_SECRET="YOUR_LONG_SECRET_KEY"
+            FRONTEND_URL="http://localhost:3000"
+
+    - Database Setup & Seeding
+        The project uses Prisma (SQLite locally). This step sets up the database and populates it with required demo data (users, transactions, events) to test pagination and roles
+
+        cd backend
+        # 1. Run migrations to create schema
+        npx prisma migrate dev --name init
+        # 2. Run seed script (name may vary, e.g. prisma/seed.js)
+        npx prisma db seed
+    
+    - Run Application
+        Start the backend and frontend in separate terminal windows.
+
+        # Terminal 1: Start Backend API
+        cd backend
+        npm start  # Runs on http://localhost:8000
+
+        # Terminal 2: Start Frontend App
+        cd frontend
+        npm start  # Runs on http://localhost:3000
+
+3. Deployment Notes
+    - Deployment Steps:
+        To deploy the project to Railway:
+
+        Point your Railway service to the root of your GitHub repository.
+
+        Configure two separate services within the project: one for the backend/ directory and one for the frontend/ directory.
+
+        Railway will handle the build process for the frontend by running the standard npm run build command.
