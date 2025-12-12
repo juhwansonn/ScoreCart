@@ -15,8 +15,8 @@ const EventsPage = () => {
     const [totalPages, setTotalPages] = useState(1);
     const LIMIT = 5;
 
-    // Check if user is Manager or Superuser to show "Create" button
-    const canCreate = user && (user.role === 'manager' || user.role === 'superuser');
+    // Helper to check if user has Manager/Superuser privileges
+    const isManager = user && (user.role === 'manager' || user.role === 'superuser');
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -56,61 +56,101 @@ const EventsPage = () => {
         }
     };
 
+    // NEW: Handle Delete
+    const handleDelete = async (eventId) => {
+        if (!window.confirm("Are you sure you want to delete this event? This cannot be undone.")) {
+            return;
+        }
+
+        try {
+            await axios.delete(`${API_BASE_URL}/events/${eventId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Remove from list immediately so user sees it disappear
+            setEvents(events.filter(e => e.id !== eventId));
+            alert("Event deleted successfully.");
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.error || "Failed to delete event");
+        }
+    };
+
     return (
-        <div style={{ padding: '20px' }}>
+        <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
             <h2>Upcoming Events</h2>
             {error && <p style={{ color: 'red' }}>{error}</p>}
             
             {/* Create Button (Managers Only) */}
-            {canCreate && (
-                <button onClick={() => navigate('/events/new')} style={{ marginBottom: '20px', padding: '10px' }}>
+            {isManager && (
+                <button onClick={() => navigate('/events/new')} style={{ marginBottom: '20px', padding: '10px 15px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
                     + Create New Event
                 </button>
             )}
 
             <div style={{ display: 'grid', gap: '20px' }}>
                 {events.map((event) => (
-                    <div key={event.id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
-                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                            <h3>{event.name}</h3>
-                            <button 
-                                onClick={() => handleRSVP(event.id)}
-                                style={{ backgroundColor: '#007bff', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}
-                            >
-                                RSVP / Join
-                            </button>
+                    <div key={event.id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px', backgroundColor: '#fff' }}>
+                        
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+                            <h3 style={{margin: 0}}>{event.name}</h3>
+                            
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                {/* RSVP Button (Visible to everyone) */}
+                                <button 
+                                    onClick={() => handleRSVP(event.id)}
+                                    style={{ backgroundColor: '#007bff', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
+                                >
+                                    Join
+                                </button>
+
+                                {/* DELETE Button (Only for Managers) */}
+                                {isManager && (
+                                    <button 
+                                        onClick={() => handleDelete(event.id)}
+                                        style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
+                                    >
+                                        Delete
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        <p><strong>Location:</strong> {event.location}</p>
-                        <p><strong>Time:</strong> {new Date(event.startTime).toLocaleString()} - {new Date(event.endTime).toLocaleString()}</p>
-                        <p>{event.description}</p>
-                        <p><strong>Capacity:</strong> {event.numGuests} / {event.capacity}</p>
+
+                        <p style={{ margin: '5px 0' }}><strong>Location:</strong> {event.location}</p>
+                        <p style={{ margin: '5px 0' }}><strong>Time:</strong> {new Date(event.startTime).toLocaleString()} - {new Date(event.endTime).toLocaleString()}</p>
+                        <p style={{ margin: '10px 0', color: '#555' }}>{event.description}</p>
+                        <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#666' }}>
+                            <strong>Guests:</strong> {event.numGuests} / {event.capacity}
+                        </p>
                     </div>
                 ))}
+                
                 {events.length === 0 && <p>No events found.</p>}
             </div>
 
             {/* --- Pagination Controls --- */}
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
-                <button 
-                    disabled={page <= 1} 
-                    onClick={() => setPage(p => p - 1)}
-                    style={{ padding: '8px 16px', cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
-                >
-                    Previous
-                </button>
-                
-                <span style={{ fontWeight: 'bold' }}>
-                    Page {page} of {totalPages || 1}
-                </span>
-                
-                <button 
-                    disabled={page >= totalPages} 
-                    onClick={() => setPage(p => p + 1)}
-                    style={{ padding: '8px 16px', cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}
-                >
-                    Next
-                </button>
-            </div>
+            {totalPages > 1 && (
+                <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
+                    <button 
+                        disabled={page <= 1} 
+                        onClick={() => setPage(p => p - 1)}
+                        style={{ padding: '8px 16px', cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+                    >
+                        Previous
+                    </button>
+                    
+                    <span style={{ fontWeight: 'bold' }}>
+                        Page {page} of {totalPages}
+                    </span>
+                    
+                    <button 
+                        disabled={page >= totalPages} 
+                        onClick={() => setPage(p => p + 1)}
+                        style={{ padding: '8px 16px', cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
