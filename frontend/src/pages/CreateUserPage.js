@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../api/config';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,7 +13,7 @@ const CreateUserPage = () => {
     const [error, setError] = useState('');
     const { token } = useAuth();
 
-    
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
