@@ -3624,11 +3624,6 @@ app.delete(
       if (!promotion)
         return res.status(404).json({ error: "promotion not found" });
 
-      if (new Date(promotion.startTime) <= new Date()) {
-        return res
-          .status(403)
-          .json({ error: "cannot delete promotion that has already started" });
-      }
 
       await prisma.promotion.delete({ where: { id } });
       return res.status(204).send();
