@@ -14,6 +14,7 @@ const CreateUserPage = () => {
     const [error, setError] = useState('');
     const { token } = useAuth();
 
+    
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
