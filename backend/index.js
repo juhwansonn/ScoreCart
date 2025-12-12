@@ -1901,6 +1901,7 @@ app.get(
       operator,
       page = 1,
       limit = 10,
+      orderBy, 
     } = req.query;
 
     const where = {
@@ -1955,6 +1956,15 @@ app.get(
       return res.status(400).json({ error: "limit not valid" });
     }
 
+    let orderByClause = { createdAt: 'desc' };
+    if (orderBy === 'oldest') {
+        orderByClause = { createdAt: 'asc' };
+    } else if (orderBy === 'amount_high') {
+        orderByClause = { amount: 'desc' };
+    } else if (orderBy === 'amount_low') {
+        orderByClause = { amount: 'asc' };
+    }
+
     try {
       const count = await prisma.transaction.count({ where });
 
@@ -1962,7 +1972,7 @@ app.get(
         where,
         skip: (pageNum - 1) * limitNum,
         take: limitNum,
-        orderBy: { createdAt: "desc" },
+        orderBy: orderByClause,
         include: {
           promotions: {
             select: { id: true },
@@ -1970,12 +1980,34 @@ app.get(
         },
       });
 
-      const results = transactions.map((transaction) =>
-        composeTransactionResponse(transaction, {
+      const relatedUserIds = transactions
+        .filter(t => t.type === 'transfer' && t.relatedId)
+        .map(t => t.relatedId);
+      
+      const uniqueIds = [...new Set(relatedUserIds)];
+      
+      const userMap = {};
+      if (uniqueIds.length > 0) {
+          const relatedUsers = await prisma.user.findMany({
+            where: { id: { in: uniqueIds } },
+            select: { id: true, utorid: true }
+          });
+          
+          relatedUsers.forEach(u => userMap[u.id] = u.utorid);
+      }
+
+      const results = transactions.map((transaction) => {
+        const base = composeTransactionResponse(transaction, {
           includeSuspicious: false,
           includeCreatedAt: true,
-        })
-      );
+        });
+        
+        if (transaction.type === 'transfer' && transaction.relatedId) {
+            base.relatedUserUtorid = userMap[transaction.relatedId];
+        }
+        
+        return base;
+      });
 
       res.status(200).json({ count, results });
     } catch (error) {

@@ -43,6 +43,19 @@ const EventsPage = () => {
         fetchEvents();
     }, [token, page]);
 
+    const handleRSVP = async (eventId) => {
+        try {
+            await axios.post(`${API_BASE_URL}/events/${eventId}/guests/me`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert("Success! You are on the guest list.");
+            // Reload page to update numbers
+            window.location.reload();
+        } catch (err) {
+            alert(err.response?.data?.error || "RSVP Failed");
+        }
+    };
+
     return (
         <div style={{ padding: '20px' }}>
             <h2>Upcoming Events</h2>
@@ -58,7 +71,15 @@ const EventsPage = () => {
             <div style={{ display: 'grid', gap: '20px' }}>
                 {events.map((event) => (
                     <div key={event.id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
-                        <h3>{event.name}</h3>
+                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                            <h3>{event.name}</h3>
+                            <button 
+                                onClick={() => handleRSVP(event.id)}
+                                style={{ backgroundColor: '#007bff', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}
+                            >
+                                RSVP / Join
+                            </button>
+                        </div>
                         <p><strong>Location:</strong> {event.location}</p>
                         <p><strong>Time:</strong> {new Date(event.startTime).toLocaleString()} - {new Date(event.endTime).toLocaleString()}</p>
                         <p>{event.description}</p>
