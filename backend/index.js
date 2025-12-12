@@ -582,13 +582,13 @@ async function fetchEventOrError(req, res, include) {
   return { eventId, event };
 }
 
+
 app.post(
   "/users",
   requireAuthenticatedUser,
   enforceRoleClearance("cashier"),
   async (req, res) => {
-    
-    const { utorid, name, email } = req.body;
+    const { utorid, name, email, password } = req.body;
 
     if (!utorid || !name || !email) {
       return res.status(400).json({ error: "Payload field missing" });
@@ -623,23 +623,26 @@ app.post(
           .json({ message: "A user with that utorid already exists" });
       }
 
-      const resetToken = uuidv4();
       const createdAtIso = new Date().toISOString();
-      const expiresAtDate = new Date();
-      expiresAtDate.setDate(expiresAtDate.getDate() + 7);
 
-        const newUser = await prisma.user.create({
-            data: {
-                utorid,
-                name,
-                email: normalizedEmail,
+      const finalPassword = password || "Password123!";
+      
+      const isVerified = true; 
+
+      const newUser = await prisma.user.create({
+        data: {
+          utorid,
+          name,
+          email: normalizedEmail,
           role: "regular",
           points: 0,
           suspicious: false,
-          verified: false,
-          token: resetToken,
+          
+          password: finalPassword,
+          verified: isVerified,
+          token: null,
           createdAt: createdAtIso,
-          expiresAt: expiresAtDate.toISOString(),
+          expiresAt: null,
         },
       });
 
@@ -649,8 +652,7 @@ app.post(
         name: newUser.name,
         email: newUser.email,
         verified: newUser.verified,
-        expiresAt: newUser.expiresAt,
-        resetToken: newUser.token,
+        defaultPassword: finalPassword, 
       });
     } catch (error) {
       console.error(error);

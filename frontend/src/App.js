@@ -13,6 +13,7 @@ import TransferPage from './pages/TransferPage';
 import RedeemPointsPage from './pages/RedeemPointsPage';
 import ProcessRedemptionPage from './pages/ProcessRedemptionPage';
 import Navbar from './components/Navbar';
+import CreateUserPage from './pages/CreateUserPage';
 
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
         {/* Manager-only Routes */}
         <Route element={<ProtectedRoute requiredRole="manager" />}>
         <Route path="/users" element={<AllUsersPage />} />
+        <Route path="/users/new" element={<CreateUserPage />} />
         <Route path="/events/new" element={<CreateEventPage />} />
         <Route path="/promotions/new" element={<CreatePromotionPage />} />
         </Route>
