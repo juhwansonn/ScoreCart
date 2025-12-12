@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; // Added useCallback
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../api/config';
@@ -13,25 +13,37 @@ const AllUsersPage = () => {
     // Pagination State
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const LIMIT = 10;
-
-    const fetchUsers = async () => {
+    
+    // 1. DEFINE fetchUsers WITH useCallback
+    // This makes it accessible everywhere in the component, but stable so it doesn't cause loops
+    const fetchUsers = useCallback(async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/users`, {
+            // Updated to use API_BASE_URL and pass the page param
+            const res = await axios.get(`${API_BASE_URL}/users`, {
                 headers: { Authorization: `Bearer ${token}` },
-                params: { page, limit: LIMIT }
+                params: { page: page, limit: 10 } // sending pagination to backend
             });
-            setUsers(response.data.results);
-            const total = response.data.count;
-            setTotalPages(Math.ceil(total / LIMIT));
+            
+            // Assuming backend returns { users: [], totalPages: 5 }
+            // Adjust this if your backend just returns an array
+            if (res.data.users) {
+                setUsers(res.data.users);
+                setTotalPages(res.data.totalPages);
+            } else {
+                // Fallback if backend just returns an array
+                setUsers(res.data);
+            }
+            
         } catch (err) {
-            setError('Failed to fetch users.');
+            console.error(err);
+            setError("Failed to fetch users");
         }
-    };
+    }, [token, page]); // Dependencies: recreate this function if token or page changes
 
+    // 2. CALL IT IN useEffect
     useEffect(() => {
         fetchUsers();
-    }, [token, page]);
+    }, [fetchUsers]); // Safe to put here now!
 
     // Role Management Logic
     const handleRoleUpdate = async (userId, newRole) => {
@@ -42,7 +54,9 @@ const AllUsersPage = () => {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             alert("User updated successfully!");
-            fetchUsers(); // Refresh list
+            
+            // 3. NOW THIS WORKS (It can "see" the function)
+            fetchUsers(); 
         } catch (err) {
             alert(err.response?.data?.error || "Update failed");
         }
@@ -50,7 +64,7 @@ const AllUsersPage = () => {
 
     // Helper: Can I edit this person?
     const canPromote = (targetRole) => {
-        // Simple logic: Superusers can do anything. Managers can only promote to Cashier.
+        if (!currentUser) return false; // Safety check
         if (currentUser.role === 'superuser') return true;
         if (currentUser.role === 'manager' && targetRole === 'cashier') return true;
         return false;
@@ -72,7 +86,7 @@ const AllUsersPage = () => {
 
             <ul style={{ listStyle: 'none', padding: 0 }}>
                 {users.map((u) => (
-                    <li key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', borderBottom: '1px solid #eee', backgroundColor: '#fff' }}>
+                    <li key={u.id || u._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', borderBottom: '1px solid #eee', backgroundColor: '#fff' }}>
                         <div>
                             <strong>{u.name}</strong> 
                             <span style={{ color: '#666', marginLeft: '8px' }}>@{u.utorid}</span>
@@ -85,12 +99,12 @@ const AllUsersPage = () => {
                         <div style={{ display: 'flex', gap: '5px' }}>
                             {/* Actions based on role */}
                             {u.role === 'regular' && canPromote('cashier') && (
-                                <button onClick={() => handleRoleUpdate(u.id, 'cashier')} style={styles.actionBtn}>
+                                <button onClick={() => handleRoleUpdate(u.id || u._id, 'cashier')} style={styles.actionBtn}>
                                     Make Cashier
                                 </button>
                             )}
                             {u.role !== 'manager' && currentUser.role === 'superuser' && (
-                                <button onClick={() => handleRoleUpdate(u.id, 'manager')} style={styles.actionBtn}>
+                                <button onClick={() => handleRoleUpdate(u.id || u._id, 'manager')} style={styles.actionBtn}>
                                     Make Manager
                                 </button>
                             )}
