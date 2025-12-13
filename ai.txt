@@ -16,6 +16,7 @@ The AI was used in the following parts:
 
 3. Documentation:
    - Formatting the INSTALL instructions to meet project requirements.
+   - Writing README.md based on INSTALL document.
 
 All AI generated codes was reviewed, tested, and modified by me so it fits the project
 requirements and operates correctly within the specific required architecture.
