@@ -1,0 +1,21 @@
+AI Usage
+
+This project utilized Large Language Models, mostly Gemini, for the development.
+The AI was used in the following parts:
+
+1. Code Generation:
+   - Generating initial skeleton codes for React components, specifically for the Promotions,
+    Transactions, and Redemption pages.
+   - Extending and modifying backend codes from A2 to make frontend side API calls effective.
+   - Creating database seed scripts
+   - Generating CSS to improve pages formatting
+
+2. Debugging and Refactoring:
+   - Assisting runtime errors like import/export mismatches and Prisma validation errors.
+   - Refactoring code to follow practices
+
+3. Documentation:
+   - Formatting the INSTALL instructions to meet project requirements.
+
+All AI generated codes was reviewed, tested, and modified by me so it fits the project
+requirements and operates correctly within the specific required architecture.
