@@ -1,63 +1,88 @@
-1. Prerequisites
-    The following software is required to run the project locally:
+1. Prerequisites: Install the following for setting up the project
 
-    Node.js (v18+): JavaScript runtime environment.
+    - Node.js 18+ (+ npm): Required for both backend and frontend. Check version with 'node -v'
+      - macOS: 'brew install node'
+      - Ubuntu/Debian: 'sudo apt install nodejs npm' 
+    - Git: Used to clone and update the repository. Check verion with 'git --version'
+    - SQLite runtime: Prisma uses SQLite locally
+      - macOS: 'brew install sqlite'
+      - Ubuntu/Debian: 'sudo apt install sqlite3'
+    - Prisma CLI: 'npm install -g prisma'
 
-    npm: Package manager (comes with Node.js).
+    Key Project Dependencies that are automatically installed via 'npm install': 
+        - react-qr-code: Used by the frontend to generate and display QR codes for Profile and Redemption Pages. 
+        - axios: HTTP client used for all API communication.
 
-    Git: Version control system.
-
-    Prisma CLI: Install globally: npm install -g prisma
 
 2. Local Setup (Development)
     The application consists of separate backend/ and frontend/ directories.
     - Installation 
-        # Clone the repository
+        Clone the repository
         git clone [https://github.com/juhwansonn/ScoreCart] 
         cd 
 
-        # Install Backend Dependencies
+        Install Backend Dependencies:
         cd backend
         npm install
 
-        # Install Frontend Dependencies
+        Install Frontend Dependencies:
         cd ../frontend
         npm install
         cd ..
 
     - Environment Configuration
         Create a .env file in the backend/ directory:
-        # .env in backend/
+        .env in backend/
             PORT=8000
-            JWT_SECRET="YOUR_LONG_SECRET_KEY"
+            JWT_SECRET="YOUR_LONG_RANDOME_SECRET_KEY". 
             FRONTEND_URL="http://localhost:3000"
 
     - Database Setup & Seeding
         The project uses Prisma (SQLite locally). This step sets up the database and populates it with required demo data (users, transactions, events) to test pagination and roles
 
         cd backend
-        # 1. Run migrations to create schema
-        npx prisma migrate dev --name init
-        # 2. Run seed script (name may vary, e.g. prisma/seed.js)
-        npx prisma db seed
+        1. Run migrations to create schema
+        - npx prisma migrate dev --name init
+        2. Run seed script (prisma/seed.js)
+        - npx prisma db seed
+        
+        - The seed contains users with ID of following: 
+            - superuser01, manager01-02, cashier01-02, reguser01-10
+            - All the seed user's passowrd is "Password123!" 
+        - You can test some functionality of the app using the seed data.
     
     - Run Application
-        Start the backend and frontend in separate terminal windows.
+        Start the backend and frontend in separate terminals.
 
-        # Terminal 1: Start Backend API
+        Terminal 1: Start Backend API
         cd backend
-        npm start  # Runs on http://localhost:8000
+        npm index.js 8000  # on http://localhost:8000
 
-        # Terminal 2: Start Frontend App
+        Terminal 2: Start Frontend App
         cd frontend
-        npm start  # Runs on http://localhost:3000
+        npm run dev  # on http://localhost:3000
 
 3. Deployment Notes
-    - Deployment Steps:
-        To deploy the project to Railway:
+    - Hosting Environments: 
+        - Railway containers - Ubuntu 20.04 with Node 22 (Node 18+ should work.)
+        - The backend and frontend run in the same virtual machine.
 
-        Point your Railway service to the root of your GitHub repository.
+    - To deploy the project to Railway:
 
-        Configure two separate services within the project: one for the backend/ directory and one for the frontend/ directory.
+        1. Point your Railway service to the root of your GitHub repository.
 
-        Railway will handle the build process for the frontend by running the standard npm run build command.
+        2. Configure two separate services within the project: one for the backend directory and one for the frontend directory.
+            - Backend Service (APIs): Set the Root Directory to '/backend'. 
+                - Set Custom Build Command: npm install
+                - Set Custom Start Command: npx prisma db push && node index.js
+                - Add watch path(not necessary): /backend/** 
+
+                - Add variables: 
+                    - FRONTEND_URL: https://frontend-production-d20b.up.railway.app
+                    - JWT_SECRET: Add your own secret random string
+            
+            - Frontend Service (React Pages): Set the Root Directory to '/frontend'.
+                - Add variables:
+                    - REACT_APP_API_URL: https://backend-production-1036.up.railway.app
+                
+                - Add watch path(no neccessary): /frontend/**
