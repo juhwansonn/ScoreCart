@@ -45,7 +45,7 @@
         - npx prisma migrate dev --name init
         2. Run seed script (prisma/seed.js)
         - npx prisma db seed
-        
+
         - The seed contains users with ID of following: 
             - superuser01, manager01-02, cashier01-02, reguser01-10
             - All the seed user's passowrd is "Password123!" 
@@ -86,3 +86,30 @@
                     - REACT_APP_API_URL: https://backend-production-1036.up.railway.app
                 
                 - Add watch path(no neccessary): /frontend/**
+
+4. Demo accounts(created via seeding and scripts): 
+    The following accounts are available for testing different role permissions: 
+    Superuser: 
+        - ID: superuser01
+        - Password: Password123!
+    Manager: 
+        - ID: manager01 # or manager02
+        - Password: Password123!
+    Casier: 
+        - ID: cashier01 # or cashier02
+        - Password: Password123!
+    Regular User:
+        - ID: reguser01 # to reguser10
+        - Password: Password123! 
+    
+5. Architecture & Tech Stack Architecture: 
+    The project follows a client-server architecture. 
+    - The frontend is a Single Page Application that communicates with the RESTful backend API via HTTP requests. 
+    - The backend manages state and data persistence using Prisma ORM.
+
+    Tech Stacks: 
+        - Frontend: React.js, Axios, CSS
+        - Backend: Node.js, Express.js
+        - DB: SQLite, Prisma
+
+
