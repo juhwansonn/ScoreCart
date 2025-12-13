@@ -1,3 +1,4 @@
+# NOTE: This README is a brief summary. The full, required instructions are in `INSTALL`—please read that document for details.
 # ScoreCart
 Express + Prisma (SQLite) backend with a React frontend.
 
